@@ -18,19 +18,20 @@ from bs4 import BeautifulSoup
 
 current_mode = 'Pracownicy'
 
-class User:
-    def __init__(self, name: str,nazwisko: str, nazwa_uczelni: str,  wydzial: str):
+class Pracownik:
+    def __init__(self, name: str,nazwisko: str, lokalizacja_uczelni: str,nazwa_uczelni: str,  wydzial: str):
         self.name = name
         self.nazwisko = nazwisko
         self.nazwa_uczelni = nazwa_uczelni
         self.wydzial = wydzial
+        self.lokalizacja_uczelni = lokalizacja_uczelni
         self.coords = self.get_coordinates()
         self.marker = map_widget.set_marker(self.coords[0], self.coords[1], text=self.name)
 
     def get_coordinates(self):
         import requests
         from bs4 import BeautifulSoup
-        url: str = f'https://pl.wikipedia.org/wiki/{self.nazwa_uczelni}'
+        url: str = f'https://pl.wikipedia.org/wiki/{self.lokalizacja_uczelni}'
         headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) '
                           'AppleWebKit/537.36 (KHTML, like Gecko) '
@@ -53,15 +54,17 @@ def add_user(users_data:list, db_engine=db_engine)->None:
     nazwisko: str = str(entry_nazwisko.get())
     nazwa_uczelni:str = entry_nazwa_uczelni.get()
     wydzial:str = entry_wydzial.get()
-    user=User(name=name,nazwisko=nazwisko, nazwa_uczelni=nazwa_uczelni, wydzial=wydzial)
-    users_data.append(User(name=name, nazwisko=nazwisko,nazwa_uczelni=nazwa_uczelni, wydzial=wydzial))
+    lokalizacja:str = entry_lokalizacja_uczelni.get()
+    user=Pracownik(name=name, nazwisko=nazwisko, lokalizacja_uczelni=lokalizacja, nazwa_uczelni=nazwa_uczelni, wydzial=wydzial)
+    users_data.append(Pracownik(name=name, lokalizacja_uczelni=lokalizacja, nazwisko=nazwisko, nazwa_uczelni=nazwa_uczelni, wydzial=wydzial))
     print(users_data)
-    sql = f"INSERT INTO public.pracownicy(name, nazwisko ,nazwa_uczelni, wydzial, geometry) VALUES ('{name}', '{nazwisko}', '{nazwa_uczelni}', '{wydzial}', 'SRID=4326;POINT({user.coords[0]} {user.coords[1]})');"
+    sql = f"INSERT INTO public.pracownicy(name, nazwisko ,lokalizacja,nazwa_uczelni, wydzial, geometry) VALUES ('{name}', '{nazwisko}','{lokalizacja}', '{nazwa_uczelni}', '{wydzial}', 'SRID=4326;POINT({user.coords[0]} {user.coords[1]})');"
     user_info(users_data)
     entry_name.delete(0, END)
     entry_nazwa_uczelni.delete(0, END)
     entry_nazwisko.delete(0, END)
     entry_wydzial.delete(0, END)
+    entry_lokalizacja_uczelni.delete(0, END)
     entry_name.focus()
 
     cursor.execute(sql)
@@ -96,6 +99,7 @@ def edit_user(users_data:list):
     entry_nazwa_uczelni.insert(0, users_data[i].nazwa_uczelni)
     entry_nazwisko.insert(0, users_data[i].nazwisko)
     entry_wydzial.insert(0, users_data[i].wydzial)
+    entry_lokalizacja_uczelni.insert(0, users_data[i].lokalizacja_uczelni)
 
     button_dodaj.config(text="Zapisz zmiany", command=lambda: update_user(users_data, i))
 
@@ -104,6 +108,7 @@ def update_user(users_data:list, i):
     users_data[i].nazwa_uczelni = entry_nazwa_uczelni.get()
     users_data[i].nazwisko = entry_nazwisko.get()
     users_data[i].wydzial = entry_wydzial.get()
+    users_data[i].lokalizacja_uczelni=entry_lokalizacja_uczelni.get()
 
     users_data[i].coords = users_data[i].get_coordinates()
     users_data[i].marker.set_position(users_data[i].coords[0], users_data[i].coords[1])
@@ -115,6 +120,7 @@ def update_user(users_data:list, i):
     entry_name.delete(0, END)
     entry_nazwa_uczelni.delete(0, END)
     entry_nazwisko.delete(0, END)
+    entry_lokalizacja_uczelni.delete(0, END)
     entry_wydzial.delete(0, END)
     entry_name.focus()
 
@@ -197,6 +203,9 @@ label_imie.grid(row=1, column=0, sticky=W)
 label_nazwa_uczelni = Label(ramka_formularz, text="Nazwa uczelni: ")
 label_nazwa_uczelni.grid(row=3, column=0, sticky=W)
 
+label_lokalizacja_uczelni=Label(ramka_formularz, text="Lokalizacja uczelni: ")
+label_lokalizacja_uczelni.grid(row=5, column=0, sticky=W)
+
 label_nazwisko = Label(ramka_formularz, text="Nazwisko: ")
 label_nazwisko.grid(row=2, column=0, sticky=W)
 
@@ -209,6 +218,9 @@ entry_name.grid(row=1, column=1, sticky="ew")
 entry_nazwa_uczelni = Entry(ramka_formularz)
 entry_nazwa_uczelni.grid(row=3, column=1, sticky="ew")
 
+entry_lokalizacja_uczelni = Entry(ramka_formularz)
+entry_lokalizacja_uczelni.grid(row=5, column=1, sticky="ew")
+
 entry_nazwisko = Entry(ramka_formularz)
 entry_nazwisko.grid(row=2, column=1, sticky="ew")
 
@@ -216,7 +228,7 @@ entry_wydzial = Entry(ramka_formularz)
 entry_wydzial.grid(row=4, column=1, sticky="ew")
 
 button_dodaj = Button(ramka_formularz, text="Dodaj obiekt", command=lambda: add_user(users))
-button_dodaj.grid(row=5, column=0, columnspan=2, sticky="ew")
+button_dodaj.grid(row=6, column=0, columnspan=2, sticky="ew")
 
 
 # RAMKA MAPY
