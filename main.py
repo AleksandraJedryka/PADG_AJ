@@ -51,7 +51,7 @@ class Pracownik:
 def add_user(users_data:list, db_engine=db_engine)->None:
     cursor = db_engine.cursor()
     name:str = entry_name.get()
-    nazwisko: str = str(entry_nazwisko.get())
+    nazwisko: str = entry_nazwisko.get()
     nazwa_uczelni:str = entry_nazwa_uczelni.get()
     wydzial:str = entry_wydzial.get()
     lokalizacja:str = entry_lokalizacja_uczelni.get()
@@ -82,7 +82,7 @@ def user_info (users_data_list,db_engine=db_engine)->None:
 
 
     for idx,user in enumerate(users_data_list):
-        list_box_lista_pracownikow.insert(idx, f"{user[1]} {user[2]} {user[3]}")
+        list_box_lista_pracownikow.insert(idx, f"{user[1]} {user[5]} {user[3]} {user[2]} {user[6]}")
 
 
 def delete_user(users_data:list):
@@ -175,8 +175,7 @@ ramka_lista_pracownikow.rowconfigure(1, weight=1)
 ramka_formularz.columnconfigure(1,weight=1)
 
 
-
-# RAMKA_LISTA_OBIEKTÓW
+# RAMKA_LISTA_Pracowników
 label_lista_pracownikow = Label(ramka_lista_pracownikow, text="Lista Pracowników")
 label_lista_pracownikow.grid(row=0, column=0, columnspan=2, sticky="w")
 
