@@ -12,8 +12,11 @@ db_engine = psycopg2.connect(
 )
 
 users: list = []
+uczelnie: list = []
 import requests
 from bs4 import BeautifulSoup
+
+current_mode = 'obiekty'
 
 class User:
     def __init__(self, name: str, location: str, posts: int, img_url: str):
@@ -122,9 +125,29 @@ def update_user(users_data:list, i):
     entry_img_url.delete(0, END)
     entry_name.focus()
 
+def display_uczelnie():
+    list_box_lista_obiektow.delete(0, END)
+    for idx, ucz in enumerate(uczelnie):
+     list_box_lista_obiektow.insert(idx, f"{ucz['nazwa']} {ucz['miasto']} {ucz['wojewodztwo']})")
 
+def add_uczelnie( nazwa:str, miasto:str, powiat:str, wojewodztwo:str):
+    uczelnie={'nazwa': nazwa,'miasto': miasto,'powiat': powiat,'wojewodztwo': wojewodztwo}
+    uczelnie.append(uczelnie)
+    if current_mode == 'uczelnie':
+        display_uczelnie()
 
-
+def switch_mode():
+    global current_mode
+    if current_mode == 'obiekty':
+        current_mode = 'uczelnie'
+        button_zmien_mode.config(text='Obiekty')
+        label_lista_obiektow.config(text='Lista Uczelni')
+        display_uczelnie()
+    else:
+        current_mode ='obiekty'
+        button_zmien_mode.config(text='Uczelnie')
+        label_lista_obiektow.config(text='Lista Obiektów')
+        user_info(users)
 
 
 root = Tk()
@@ -159,7 +182,10 @@ ramka_szczegoly_obiektu.columnconfigure(4,weight=1)
 
 # RAMKA_LISTA_OBIEKTÓW
 label_lista_obiektow = Label(ramka_lista_obiektow, text="Lista obiektów")
-label_lista_obiektow.grid(row=0, column=0, columnspan=3)
+label_lista_obiektow.grid(row=0, column=0, columnspan=2, sticky="w")
+
+button_zmien_mode = Button(ramka_lista_obiektow, text="Uczelnie", command=switch_mode)
+button_zmien_mode.grid(row=0, column=2, sticky="ew")
 
 list_box_lista_obiektow = Listbox(ramka_lista_obiektow)
 list_box_lista_obiektow.grid(row=1, column=0, columnspan=3, sticky="nsew")
