@@ -31,7 +31,7 @@ class User:
 
 def user_info(users_data:list)->None:
     for user in users_data:
-        print(f'Twój znajomy {user.name} z miejscowości {user.location} opublikował tyle {user.posts} postów ')
+        print(f'Twój znajomy {user.name} {user.nazwisko} z miejscowości {user.location} opublikował tyle {user.posts} postów ')
 
 
 def add_user(users_data:list)->None:
