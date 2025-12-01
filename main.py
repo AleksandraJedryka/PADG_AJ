@@ -53,7 +53,7 @@ def add_user(users_data:list, db_engine=db_engine)->None:
     user=User(name=name, location=location, posts=posts, img_url=img_url)
     users_data.append(User(name=name, location=location, posts=posts, img_url=img_url))
     print(users_data)
-    sql = f"INSERT INTO public.userss(name, location, posts, img_url, geometry) VALUES ('{name}', '{location}', {posts}, '{img_url}', 'SRID=4326;POINT({user.coords[0]} {user.coords[1]})');"
+    sql = f"INSERT INTO public.userss(name,location, posts, img_url, geometry) VALUES ('{name}', '{location}', {posts}, '{img_url}', 'SRID=4326;POINT({user.coords[0]} {user.coords[1]})');"
     user_info(users_data)
     entry_name.delete(0, END)
     entry_lokalizacja.delete(0, END)
@@ -129,38 +129,54 @@ def update_user(users_data:list, i):
 
 root = Tk()
 root.title("Mapbook")
-root.geometry("1025x760")
+root.geometry("1450x800")
+root.columnconfigure(0, weight=3)
+root.columnconfigure(1, weight=1)
+root.rowconfigure(0, weight=1)
+root.rowconfigure(1, weight=0)
+root.rowconfigure(2, weight=1)
 
 ramka_lista_obiektow = Frame(root)
 ramka_formularz = Frame(root)
 ramka_szczegoly_obiektu = Frame(root)
 ramka_mapa = Frame(root)
 
-ramka_lista_obiektow.grid(row=0, column=0)
-ramka_formularz.grid(row=0, column=1)
-ramka_szczegoly_obiektu.grid(row=1, column=0, columnspan=2)
-ramka_mapa.grid(row=2, column=0, columnspan=2)
+ramka_lista_obiektow.grid(row=0, column=1, sticky="nsew")
+ramka_formularz.grid(row=2, column=1, sticky="nsew")
+ramka_szczegoly_obiektu.grid(row=1, column=1, sticky="ew")
+ramka_mapa.grid(row=0, column=0, rowspan=3, sticky="nsew")
+
+ramka_mapa.rowconfigure(0,weight=1)
+ramka_mapa.columnconfigure(0,weight=1)
+
+ramka_lista_obiektow.columnconfigure(0,weight=1)
+ramka_lista_obiektow.rowconfigure(1,weight=1)
+
+ramka_formularz.columnconfigure(1,weight=1)
+
+ramka_szczegoly_obiektu.columnconfigure(1,weight=1)
+ramka_szczegoly_obiektu.columnconfigure(4,weight=1)
 
 # RAMKA_LISTA_OBIEKTÓW
 label_lista_obiektow = Label(ramka_lista_obiektow, text="Lista obiektów")
 label_lista_obiektow.grid(row=0, column=0, columnspan=3)
 
 list_box_lista_obiektow = Listbox(ramka_lista_obiektow)
-list_box_lista_obiektow.grid(row=1, column=0, columnspan=3)
+list_box_lista_obiektow.grid(row=1, column=0, columnspan=3, sticky="nsew")
 
 buttom_pokaz_szczegoly = Button(ramka_lista_obiektow, text="Pokaż szczegóły", command=lambda: user_details(users))
-buttom_pokaz_szczegoly.grid(row=2, column=0)
+buttom_pokaz_szczegoly.grid(row=2, column=0, sticky="ew")
 
 buttom_usun_obiekt = Button(ramka_lista_obiektow, text="Usuń obiekt", command=lambda: delete_user(users))
-buttom_usun_obiekt.grid(row=2, column=1)
+buttom_usun_obiekt.grid(row=2, column=1, sticky="ew")
 
 buttom_edytuj_obiekt = Button(ramka_lista_obiektow, text="Edytuj obiekt", command=lambda: edit_user(users))
-buttom_edytuj_obiekt.grid(row=2, column=2)
+buttom_edytuj_obiekt.grid(row=2, column=2, sticky="ew")
 
 
 
 #RAMKA FORMULARZ
-label_formularz = Label(ramka_formularz, text="Formularz: ")
+label_formularz = Label(ramka_formularz, text="Formularz ")
 label_formularz.grid(row=0, column=0, columnspan=2)
 
 label_imie = Label(ramka_formularz, text= "Imie: ")
@@ -176,20 +192,19 @@ label_img_url = Label(ramka_formularz, text="Obrazek: ")
 label_img_url.grid(row=4, column=0, sticky=W)
 
 entry_name = Entry(ramka_formularz)
-entry_name.grid(row=1, column=1)
+entry_name.grid(row=1, column=1, sticky="ew")
 
 entry_lokalizacja = Entry(ramka_formularz)
-entry_lokalizacja.grid(row=2, column=1)
+entry_lokalizacja.grid(row=2, column=1, sticky="ew")
 
 entry_posty = Entry(ramka_formularz)
-entry_posty.grid(row=3, column=1)
+entry_posty.grid(row=3, column=1, sticky="ew")
 
 entry_img_url = Entry(ramka_formularz)
-entry_img_url.grid(row=4, column=1)
+entry_img_url.grid(row=4, column=1, sticky="ew")
 
 button_dodaj_obiekt = Button(ramka_formularz, text="Dodaj obiekt", command=lambda: add_user(users))
-button_dodaj_obiekt.grid(row=5, column=0, columnspan=2)
-
+button_dodaj_obiekt.grid(row=5, column=0, columnspan=2, sticky="ew")
 
 
 # RAMKA SZCZEGÓŁY OBIEKTU
@@ -216,10 +231,10 @@ label_posty_szczegoly_obiektu_wartosc.grid(row=1, column=6)
 
 
 # RAMKA MAPY
-map_widget = tkintermapview.TkinterMapView(ramka_mapa, width=1025, height=600, corner_radius=0)
+map_widget = tkintermapview.TkinterMapView(ramka_mapa, corner_radius=0)
 map_widget.set_position(52.0, 21.0)
 map_widget.set_zoom(6)
-map_widget.grid(row=0, column=0)
+map_widget.grid(row=0, column=0, sticky="nsew")
 
 
 root.mainloop()
