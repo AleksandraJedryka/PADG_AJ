@@ -3,20 +3,13 @@ import tkintermapview
 
 import psycopg2
 from folder.controller import remove_user, update_user
-db_engine = psycopg2.connect(
-        user="postgres",
-        database="projekt_padg",
-        password="postgres",
-        port="5432",
-        host="localhost"
-)
 
-users: list = []
+pracownicy: list = []
 uczelnie: list = []
 import requests
 from bs4 import BeautifulSoup
 
-current_mode = 'Pracownicy'
+aktualny_mode = 'Pracownicy'
 
 class Pracownik:
     def __init__(self, name: str,nazwisko: str, lokalizacja_uczelni: str,nazwa_uczelni: str,  wydzial: str):
@@ -48,18 +41,15 @@ class Pracownik:
         # print(longitude)
         return [latitude, longitude]
 
-def add_user(users_data:list, db_engine=db_engine)->None:
-    cursor = db_engine.cursor()
+def add_user(users_data:list)->None:
     name:str = entry_name.get()
-    nazwisko: str = str(entry_nazwisko.get())
+    nazwisko: str = entry_nazwisko.get()
     nazwa_uczelni:str = entry_nazwa_uczelni.get()
     wydzial:str = entry_wydzial.get()
     lokalizacja:str = entry_lokalizacja_uczelni.get()
-    user=Pracownik(name=name, nazwisko=nazwisko, lokalizacja_uczelni=lokalizacja, nazwa_uczelni=nazwa_uczelni, wydzial=wydzial)
     users_data.append(Pracownik(name=name, lokalizacja_uczelni=lokalizacja, nazwisko=nazwisko, nazwa_uczelni=nazwa_uczelni, wydzial=wydzial))
     print(users_data)
-    sql = f"INSERT INTO public.pracownicy(name, nazwisko ,lokalizacja,nazwa_uczelni, wydzial, geometry) VALUES ('{name}', '{nazwisko}','{lokalizacja}', '{nazwa_uczelni}', '{wydzial}', 'SRID=4326;POINT({user.coords[0]} {user.coords[1]})');"
-    user_info(users_data)
+    pracownik_info(users_data)
     entry_name.delete(0, END)
     entry_nazwa_uczelni.delete(0, END)
     entry_nazwisko.delete(0, END)
@@ -67,29 +57,18 @@ def add_user(users_data:list, db_engine=db_engine)->None:
     entry_lokalizacja_uczelni.delete(0, END)
     entry_name.focus()
 
-    cursor.execute(sql)
-    db_engine.commit()
 
-
-def user_info (users_data_list,db_engine=db_engine)->None:
+def pracownik_info (users_data_list)->None:
     list_box_lista_pracownikow.delete(0, END)
-    sql = "SELECT *, ST_AsEWKT(geometry) FROM public.pracownicy"
-    cursor = db_engine.cursor()
-    cursor.execute(sql)
-    users_data = cursor.fetchall()
-    users_data_list=users_data
-    # print(list(map(float, user[-1][16:-1].split())))
-
-
     for idx,user in enumerate(users_data_list):
-        list_box_lista_pracownikow.insert(idx, f"{user[1]} {user[2]} {user[3]}")
+        list_box_lista_pracownikow.insert(idx, f"{user.name} {user.nazwisko} {user.nazwa_uczelni} {user.wydzial} {user.lokalizacja_uczelni}")
 
 
 def delete_user(users_data:list):
     i = list_box_lista_pracownikow.index(ACTIVE)
     users_data[i].marker.delete()
     users_data.pop(i)
-    user_info(users_data)
+    pracownik_info(users_data)
 
 
 
@@ -114,9 +93,9 @@ def update_user(users_data:list, i):
     users_data[i].marker.set_position(users_data[i].coords[0], users_data[i].coords[1])
     users_data[i].marker.set_text(users_data[i].name)
 
-    user_info(users_data)
+    pracownik_info(users_data)
 
-    button_dodaj.config(text="Dodaj obiekt", command=lambda: add_user(users))
+    button_dodaj.config(text="Dodaj obiekt", command=lambda: add_user(pracownicy))
     entry_name.delete(0, END)
     entry_nazwa_uczelni.delete(0, END)
     entry_nazwisko.delete(0, END)
@@ -124,7 +103,7 @@ def update_user(users_data:list, i):
     entry_wydzial.delete(0, END)
     entry_name.focus()
 
-def display_uczelnie():
+def info_uczelnie():
     list_box_lista_pracownikow.delete(0, END)
     for idx, ucz in enumerate(uczelnie):
      list_box_lista_pracownikow.insert(idx, f"{ucz['nazwa']} {ucz['miasto']} {ucz['wojewodztwo']})")
@@ -132,21 +111,21 @@ def display_uczelnie():
 def add_uczelnie( nazwa:str, miasto:str, powiat:str, wojewodztwo:str):
     uczelnie={'nazwa': nazwa,'miasto': miasto,'powiat': powiat,'wojewodztwo': wojewodztwo}
     uczelnie.append(uczelnie)
-    if current_mode == 'uczelnie':
-        display_uczelnie()
+    if aktualny_mode == 'uczelnie':
+        info_uczelnie()
 
 def switch_mode():
-    global current_mode
-    if current_mode == 'Pracownicy':
-        current_mode = 'uczelnie'
+    global aktualny_mode
+    if aktualny_mode == 'Pracownicy':
+        aktualny_mode = 'uczelnie'
         button_zmien_mode.config(text='Pracownicy')
         label_lista_pracownikow.config(text='Lista Uczelni')
-        display_uczelnie()
+        info_uczelnie()
     else:
-        current_mode ='Pracownicy'
+        aktualny_mode = 'Pracownicy'
         button_zmien_mode.config(text='Uczelnie')
         label_lista_pracownikow.config(text='Lista Pracowników')
-        user_info(users)
+        pracownik_info(pracownicy)
 
 
 root = Tk()
@@ -175,8 +154,7 @@ ramka_lista_pracownikow.rowconfigure(1, weight=1)
 ramka_formularz.columnconfigure(1,weight=1)
 
 
-
-# RAMKA_LISTA_OBIEKTÓW
+# RAMKA_LISTA_Pracowników
 label_lista_pracownikow = Label(ramka_lista_pracownikow, text="Lista Pracowników")
 label_lista_pracownikow.grid(row=0, column=0, columnspan=2, sticky="w")
 
@@ -186,10 +164,10 @@ button_zmien_mode.grid(row=0, column=2, sticky="ew")
 list_box_lista_pracownikow = Listbox(ramka_lista_pracownikow)
 list_box_lista_pracownikow.grid(row=1, column=0, columnspan=3, sticky="nsew")
 
-buttom_usun = Button(ramka_lista_pracownikow, text="Usuń obiekt", command=lambda: delete_user(users))
+buttom_usun = Button(ramka_lista_pracownikow, text="Usuń obiekt", command=lambda: delete_user(pracownicy))
 buttom_usun.grid(row=2, column=1, sticky="ew")
 
-buttom_edytuj_obiekt = Button(ramka_lista_pracownikow, text="Edytuj obiekt", command=lambda: edit_user(users))
+buttom_edytuj_obiekt = Button(ramka_lista_pracownikow, text="Edytuj obiekt", command=lambda: edit_user(pracownicy))
 buttom_edytuj_obiekt.grid(row=2, column=2, sticky="ew")
 
 
@@ -227,7 +205,7 @@ entry_nazwisko.grid(row=2, column=1, sticky="ew")
 entry_wydzial = Entry(ramka_formularz)
 entry_wydzial.grid(row=4, column=1, sticky="ew")
 
-button_dodaj = Button(ramka_formularz, text="Dodaj obiekt", command=lambda: add_user(users))
+button_dodaj = Button(ramka_formularz, text="Dodaj obiekt", command=lambda: add_user(pracownicy))
 button_dodaj.grid(row=6, column=0, columnspan=2, sticky="ew")
 
 
