@@ -31,7 +31,7 @@ class User:
 
 def user_info(users_data:list)->None:
     for user in users_data:
-        print(f'Twój znajomy {user.name} z miejscowości {user.location} opublikował tyle {user.posts} postów ')
+        print(f'Twój znajomy {user.name} {user.nazwisko} z miejscowości {user.nazwa_uczelni} opublikował tyle {user.nazwisko} postów ')
 
 
 def add_user(users_data:list)->None:
@@ -52,8 +52,8 @@ def update_user(users_data:list)->None:
     for user in users_data:
         if user.name==tmp_name:
             user.name=input("podaj nowe imie uzytkownika: ")
-            user.location=input("podaj nowa miejscowosc")
-            user.posts=input("podaj liczbe postow")
+            user.nazwa_uczelni=input("podaj nowa miejscowosc")
+            user.nazwisko=input("podaj liczbe postow")
             user.coords=user.get_coordinates()
 
 def get_coordinates(city_name:str)->list:
@@ -85,7 +85,7 @@ def get_map(users_data:list)->None:
         folium.Marker(
             location=user.coords,
             tooltip="Click me!",
-            popup=f"<h4>user: {user.name}</h3> {user.location} {user.posts},<img src={user.img_url}alt='1'/>",
+            popup=f"<h4>user: {user.name}</h3> {user.nazwa_uczelni} {user.nazwisko},<img src={user.wydzial}alt='1'/>",
             icon=folium.Icon(icon="cloud"),
         ).add_to(m)
 
