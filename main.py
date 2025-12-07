@@ -6,6 +6,7 @@ from folder.controller import remove_user, update_user
 
 pracownicy: list = []
 uczelnie: list = []
+studenci: list = []
 import requests
 from bs4 import BeautifulSoup
 
@@ -108,22 +109,27 @@ def info_uczelnie():
     for idx, ucz in enumerate(uczelnie):
      list_box_lista_pracownikow.insert(idx, f"{ucz['nazwa']} {ucz['miasto']} {ucz['wojewodztwo']})")
 
+def info_studenci():
+    list_box_lista_pracownikow.delete(0, END)
+    for idx, st in enumerate(studenci):
+        list_box_lista_pracownikow.insert(idx, f"{st['imie']}")
+
 def add_uczelnie( nazwa:str, miasto:str, powiat:str, wojewodztwo:str):
     uczelnie={'nazwa': nazwa,'miasto': miasto,'powiat': powiat,'wojewodztwo': wojewodztwo}
     uczelnie.append(uczelnie)
     if aktualny_mode == 'uczelnie':
         info_uczelnie()
 
-def switch_mode():
+def set_mode(mode:str):
     global aktualny_mode
-    if aktualny_mode == 'Pracownicy':
-        aktualny_mode = 'uczelnie'
-        button_zmien_mode.config(text='Pracownicy')
+    aktualny_mode = mode
+    if mode == 'uczelnie':
         label_lista_pracownikow.config(text='Lista Uczelni')
         info_uczelnie()
+    elif mode == 'studenci':
+        label_lista_pracownikow.config(text='Lista Studenci')
+        info_studenci()
     else:
-        aktualny_mode = 'Pracownicy'
-        button_zmien_mode.config(text='Uczelnie')
         label_lista_pracownikow.config(text='Lista Pracowników')
         pracownik_info(pracownicy)
 
@@ -158,17 +164,23 @@ ramka_formularz.columnconfigure(1,weight=1)
 label_lista_pracownikow = Label(ramka_lista_pracownikow, text="Lista Pracowników")
 label_lista_pracownikow.grid(row=0, column=0, columnspan=2, sticky="w")
 
-button_zmien_mode = Button(ramka_lista_pracownikow, text="Uczelnie", command=switch_mode)
+button_zmien_mode = Button(ramka_lista_pracownikow, text="Uczelnie", command=lambda: set_mode('uczelnie'))
 button_zmien_mode.grid(row=0, column=2, sticky="ew")
 
+button_zmien_mode_pracownicy = Button(ramka_lista_pracownikow, text="Pracownicy", command=lambda: set_mode('Pracownicy'))
+button_zmien_mode_pracownicy.grid(row=0, column=3, sticky="ew")
+
+button_zmien_mode_studenci = Button(ramka_lista_pracownikow, text="Studenci", command=lambda: set_mode('studenci'))
+button_zmien_mode_studenci.grid(row=0, column=4, sticky="ew")
+
 list_box_lista_pracownikow = Listbox(ramka_lista_pracownikow)
-list_box_lista_pracownikow.grid(row=1, column=0, columnspan=3, sticky="nsew")
+list_box_lista_pracownikow.grid(row=1, column=0, columnspan=5, sticky="nsew")
 
 buttom_usun = Button(ramka_lista_pracownikow, text="Usuń obiekt", command=lambda: delete_user(pracownicy))
-buttom_usun.grid(row=2, column=1, sticky="ew")
+buttom_usun.grid(row=2, column=3, sticky="ew")
 
 buttom_edytuj_obiekt = Button(ramka_lista_pracownikow, text="Edytuj obiekt", command=lambda: edit_user(pracownicy))
-buttom_edytuj_obiekt.grid(row=2, column=2, sticky="ew")
+buttom_edytuj_obiekt.grid(row=2, column=4, sticky="ew")
 
 
 #RAMKA FORMULARZ
