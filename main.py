@@ -114,23 +114,125 @@ def info_studenci():
     for idx, st in enumerate(studenci):
         list_box_lista_pracownikow.insert(idx, f"{st['imie']}")
 
-def add_uczelnie( nazwa:str, miasto:str, powiat:str, wojewodztwo:str):
-    uczelnie={'nazwa': nazwa,'miasto': miasto,'powiat': powiat,'wojewodztwo': wojewodztwo}
-    uczelnie.append(uczelnie)
+def show_pracownicy_form():
+            label_imie.grid()
+            entry_name.grid()
+            label_nazwisko.grid()
+            entry_nazwisko.grid()
+            label_nazwa_uczelni.grid()
+            entry_nazwa_uczelni.grid()
+            label_wydzial.grid()
+            entry_wydzial.grid()
+            label_lokalizacja_uczelni.grid()
+            entry_lokalizacja_uczelni.grid()
+            try:
+                label_ucz_nazwa.grid_remove()
+                entry_ucz_nazwa.grid_remove()
+                label_ucz_miasto.grid_remove()
+                entry_ucz_miasto.grid_remove()
+                label_ucz_powiat.grid_remove()
+                entry_ucz_powiat.grid_remove()
+                label_ucz_wojew.grid_remove()
+                entry_ucz_wojew.grid_remove()
+            except NameError:
+                pass
+
+def show_uczelnie_form():
+    label_imie.grid_remove()
+    entry_name.grid_remove()
+    label_nazwisko.grid_remove()
+    entry_nazwisko.grid_remove()
+    label_nazwa_uczelni.grid_remove()
+    entry_nazwa_uczelni.grid_remove()
+    label_wydzial.grid_remove()
+    entry_wydzial.grid_remove()
+    label_lokalizacja_uczelni.grid_remove()
+    entry_lokalizacja_uczelni.grid_remove()
+    label_ucz_nazwa.grid(row=1, column=0, sticky=W)
+    entry_ucz_nazwa.grid(row=1, column=1, sticky="ew")
+    label_ucz_miasto.grid(row=2, column=0, sticky=W)
+    entry_ucz_miasto.grid(row=2, column=1, sticky="ew")
+    label_ucz_powiat.grid(row=3, column=0, sticky=W)
+    entry_ucz_powiat.grid(row=3, column=1, sticky="ew")
+    label_ucz_wojew.grid(row=4, column=0, sticky=W)
+    entry_ucz_wojew.grid(row=4, column=1, sticky="ew")
+
+
+
+def add_uczelnie():
+    nazwa = entry_ucz_nazwa.get()
+    miasto = entry_ucz_miasto.get()
+    powiat = entry_ucz_powiat.get()
+    wojewodztwo = entry_ucz_wojew.get()
+    ucz = {'nazwa': nazwa, 'miasto': miasto, 'powiat': powiat, 'wojewodztwo': wojewodztwo}
+    uczelnie.append(ucz)
     if aktualny_mode == 'uczelnie':
         info_uczelnie()
+    entry_ucz_nazwa.delete(0, END)
+    entry_ucz_miasto.delete(0, END)
+    entry_ucz_powiat.delete(0, END)
+    entry_ucz_wojew.delete(0, END)
+    entry_ucz_nazwa.focus()
+
+def update_uczelnia(i):
+    uczelnie[i]['nazwa'] = entry_ucz_nazwa.get()
+    uczelnie[i]['miasto'] = entry_ucz_miasto.get()
+    uczelnie[i]['powiat'] = entry_ucz_powiat.get()
+    uczelnie[i]['wojewodztwo'] = entry_ucz_wojew.get()
+    info_uczelnie()
+    button_dodaj.config(text="Dodaj obiekt", command=lambda: add_user(pracownicy) if aktualny_mode == 'Pracownicy' else add_uczelnie())
+    entry_ucz_nazwa.delete(0, END)
+    entry_ucz_miasto.delete(0, END)
+    entry_ucz_powiat.delete(0, END)
+    entry_ucz_wojew.delete(0, END)
+    entry_ucz_nazwa.focus()
+
+def delete_current():
+    i = list_box_lista_pracownikow.index(ACTIVE)
+    if aktualny_mode == 'Pracownicy':
+        pracownicy[i].marker.delete()
+        pracownicy.pop(i)
+        pracownik_info(pracownicy)
+    elif aktualny_mode == 'uczelnie':
+        uczelnie.pop(i)
+        info_uczelnie()
+    elif aktualny_mode == 'studenci':
+        studenci.pop(i)
+        info_studenci()
+
+def edit_current():
+    i = list_box_lista_pracownikow.index(ACTIVE)
+    if aktualny_mode == 'Pracownicy':
+        edit_user(pracownicy)
+    elif aktualny_mode == 'uczelnie':
+        entry_ucz_nazwa.delete(0, END)
+        entry_ucz_miasto.delete(0, END)
+        entry_ucz_powiat.delete(0, END)
+        entry_ucz_wojew.delete(0, END)
+        entry_ucz_nazwa.insert(0, uczelnie[i]['nazwa'])
+        entry_ucz_miasto.insert(0, uczelnie[i]['miasto'])
+        entry_ucz_powiat.insert(0, uczelnie[i]['powiat'])
+        entry_ucz_wojew.insert(0, uczelnie[i]['wojewodztwo'])
+        button_dodaj.config(text="Zapisz zmiany", command=lambda idx=i: update_uczelnia(idx))
 
 def set_mode(mode:str):
     global aktualny_mode
     aktualny_mode = mode
     if mode == 'uczelnie':
         label_lista_pracownikow.config(text='Lista Uczelni')
+        label_formularz.config(text='Formularz - uczelnie ')
+        show_uczelnie_form()
+        button_dodaj.config(text="Dodaj obiekt", command=add_uczelnie)
         info_uczelnie()
     elif mode == 'studenci':
         label_lista_pracownikow.config(text='Lista Studenci')
+        label_formularz.config(text='Formularz - studenci ')
         info_studenci()
     else:
         label_lista_pracownikow.config(text='Lista Pracowników')
+        label_formularz.config(text='Formularz - pracownicy ')
+        show_pracownicy_form()
+        button_dodaj.config(text="Dodaj obiekt", command=lambda: add_user(pracownicy))
         pracownik_info(pracownicy)
 
 
@@ -162,7 +264,7 @@ ramka_formularz.columnconfigure(1,weight=1)
 
 # RAMKA_LISTA_Pracowników
 label_lista_pracownikow = Label(ramka_lista_pracownikow, text="Lista Pracowników")
-label_lista_pracownikow.grid(row=0, column=0, columnspan=2, sticky="w")
+label_lista_pracownikow.grid(row=0, column=0, columnspan=2, sticky="ew")
 
 button_zmien_mode = Button(ramka_lista_pracownikow, text="Uczelnie", command=lambda: set_mode('uczelnie'))
 button_zmien_mode.grid(row=0, column=2, sticky="ew")
@@ -217,9 +319,22 @@ entry_nazwisko.grid(row=2, column=1, sticky="ew")
 entry_wydzial = Entry(ramka_formularz)
 entry_wydzial.grid(row=4, column=1, sticky="ew")
 
+label_ucz_nazwa = Label(ramka_formularz, text="Nazwa: ")
+entry_ucz_nazwa = Entry(ramka_formularz)
+
+label_ucz_miasto = Label(ramka_formularz, text="Miasto: ")
+entry_ucz_miasto = Entry(ramka_formularz)
+
+label_ucz_powiat = Label(ramka_formularz, text="Powiat: ")
+entry_ucz_powiat = Entry(ramka_formularz)
+
+label_ucz_wojew = Label(ramka_formularz, text="Wojewodztwo: ")
+entry_ucz_wojew = Entry(ramka_formularz)
+
 button_dodaj = Button(ramka_formularz, text="Dodaj obiekt", command=lambda: add_user(pracownicy))
 button_dodaj.grid(row=6, column=0, columnspan=2, sticky="ew")
 
+show_pracownicy_form()
 
 # RAMKA MAPY
 map_widget = tkintermapview.TkinterMapView(ramka_mapa, corner_radius=0)
