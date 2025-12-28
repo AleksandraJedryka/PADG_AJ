@@ -383,8 +383,13 @@ ramka_lista_pracownikow = Frame(root)
 ramka_formularz = Frame(root)
 ramka_mapa = Frame(root)
 
+# Right panel layout
 ramka_lista_pracownikow.grid(row=0, column=1, sticky="nsew")
-ramka_formularz.grid(row=2, column=1, sticky="nsew")
+# Add a spacer row (empty Frame or just rowconfigure)
+spacer = Frame(root, height=30)  # Adjust height as needed
+spacer.grid(row=1, column=1, sticky="ew")
+ramka_formularz.grid(row=2, column=1, sticky="sew")  # 'sew' to stick to bottom right
+
 ramka_mapa.grid(row=0, column=0, rowspan=3, sticky="nsew")
 
 ramka_mapa.rowconfigure(0, weight=1)
@@ -395,7 +400,15 @@ ramka_lista_pracownikow.rowconfigure(1, weight=1)
 
 ramka_formularz.columnconfigure(1, weight=1)
 
+
+
+# Configure row weights to push the form to the bottom
+root.rowconfigure(0, weight=0)  # List grows
+root.rowconfigure(1, weight=0)  # Spacer fixed
+root.rowconfigure(2, weight=1)  # Form stays at bottom
+
 # RAMKA_LISTA_Pracowników
+
 label_lista_pracownikow = Label(ramka_lista_pracownikow, text="Lista Pracowników")
 label_lista_pracownikow.grid(row=0, column=0, columnspan=2, sticky="ew")
 
