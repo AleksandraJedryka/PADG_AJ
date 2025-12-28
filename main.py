@@ -138,6 +138,8 @@ def apply_uczelnie_filter():
     for idx, ucz in enumerate(uczelnie):
         if selected == "Wszystkie" or ucz['wojewodztwo'] == selected:
             list_box_lista_pracownikow.insert(idx, f"{ucz['nazwa']} {ucz['miasto']} {ucz['powiat']} {ucz['wojewodztwo']}")
+        list_box_lista_pracownikow.insert(idx, f"{ucz['nazwa']} {ucz['miasto']} {ucz['powiat']} {ucz['wojewodztwo']}")
+
 
 def info_studenci():
     apply_studenci_filter()
@@ -155,6 +157,11 @@ def apply_studenci_filter():
 def update_student_filter():
     grupy = sorted(set(st.get('grupa_dziekanska', '') for st in studenci if st.get('grupa_dziekanska')))
     combo_filter['values'] = ["Wszystkie"] + grupy
+        list_box_lista_pracownikow.insert(
+            idx,
+            f"{st['imie']} {st['nazwisko']} {st['nazwa_uczelni']} {st['wydzial']} {st['kierunek']} {st['grupa_dziekanska']} {st['lokalizacja_uczelni']}"
+        )
+
 
 def show_pracownicy_form():
         label_imie.grid()
@@ -297,6 +304,28 @@ def add_student():
         entry_lokalizacja_uczelni.delete(0, END)
         entry_stud_akademik.delete(0, END)
         entry_imie.focus()
+    button_dodaj.grid(row=8, column=0, columnspan=2, sticky="ew")
+
+def add_student():
+    student = {
+        'imie': entry_imie.get(),
+        'nazwisko': entry_nazwisko.get(),
+        'nazwa_uczelni': entry_nazwa_uczelni.get(),
+        'wydzial': entry_wydzial.get(),
+        'kierunek': entry_stud_kierunek.get(),
+        'grupa_dziekanska': entry_stud_grupa.get(),
+        'lokalizacja_uczelni': entry_lokalizacja_uczelni.get()
+    }
+    studenci.append(student)
+    info_studenci()
+    entry_imie.delete(0, END)
+    entry_nazwisko.delete(0, END)
+    entry_nazwa_uczelni.delete(0, END)
+    entry_wydzial.delete(0, END)
+    entry_stud_kierunek.delete(0, END)
+    entry_stud_grupa.delete(0, END)
+    entry_lokalizacja_uczelni.delete(0, END)
+    entry_imie.focus()
 
 
 def add_uczelnie():
