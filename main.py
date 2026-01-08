@@ -1,3 +1,20 @@
+class Student:
+    def __init__(self, imie, nazwisko, nazwa_uczelni, wydzial, kierunek, grupa_dziekanska, lokalizacja_uczelni, akademik):
+        self.imie = imie
+        self.nazwisko = nazwisko
+        self.nazwa_uczelni = nazwa_uczelni
+        self.wydzial = wydzial
+        self.kierunek = kierunek
+        self.grupa_dziekanska = grupa_dziekanska
+        self.lokalizacja_uczelni = lokalizacja_uczelni
+        self.akademik = akademik
+
+class Uczelnia:
+    def __init__(self, nazwa, miasto, powiat, wojewodztwo):
+        self.nazwa = nazwa
+        self.miasto = miasto
+        self.powiat = powiat
+        self.wojewodztwo = wojewodztwo
 from tkinter import *
 import tkintermapview
 
@@ -31,7 +48,7 @@ class Pracownik:
         self.lokalizacja_uczelni = lokalizacja_uczelni
         self.powiat = powiat
         self.coords = self.get_coordinates()
-        self.marker = map_widget.set_marker(self.coords[0], self.coords[1], text=self.name )
+        self.marker = map_widget.set_marker(self.coords[0], self.coords[1], text=self.name)
 
     def get_coordinates(self):
         import requests
@@ -143,8 +160,8 @@ def apply_uczelnie_filter():
     selected = combo_filter.get()
     list_box_lista_pracownikow.delete(0, END)
     for idx, ucz in enumerate(uczelnie):
-        if selected == "Wszystkie" or ucz['wojewodztwo'] == selected:
-            list_box_lista_pracownikow.insert(idx, f"{ucz['nazwa']} {ucz['miasto']} {ucz['powiat']} {ucz['wojewodztwo']}")
+        if selected == "Wszystkie" or ucz.wojewodztwo == selected:
+            list_box_lista_pracownikow.insert(idx, f"{ucz.nazwa} {ucz.miasto} {ucz.powiat} {ucz.wojewodztwo}")
 
 
 
@@ -155,14 +172,14 @@ def apply_studenci_filter():
     selected = combo_filter.get()
     list_box_lista_pracownikow.delete(0, END)
     for idx, st in enumerate(studenci):
-        if selected == "Wszystkie" or st.get('grupa_dziekanska', '') == selected:
+        if selected == "Wszystkie" or st.grupa_dziekanska == selected:
             list_box_lista_pracownikow.insert(
                 idx,
-                f"{st['imie']} {st['nazwisko']} {st['nazwa_uczelni']} {st['wydzial']} {st['kierunek']} {st['grupa_dziekanska']} {st['lokalizacja_uczelni']} {st.get('akademik', '')}"
+                f"{st.imie} {st.nazwisko} {st.nazwa_uczelni} {st.wydzial} {st.kierunek} {st.grupa_dziekanska} {st.lokalizacja_uczelni} {st.akademik}"
             )
 
 def update_student_filter():
-    grupy = sorted(set(st.get('grupa_dziekanska', '') for st in studenci if st.get('grupa_dziekanska')))
+    grupy = sorted(set(st.grupa_dziekanska for st in studenci if st.grupa_dziekanska))
     combo_filter['values'] = ["Wszystkie"] + grupy
     combo_filter.set("Wszystkie")
 
@@ -281,16 +298,16 @@ def show_studenci_form():
     button_dodaj.grid(row=9, column=0, columnspan=2, sticky="ew")
 
 def add_student():
-        student = {
-            'imie': entry_imie.get(),
-            'nazwisko': entry_nazwisko.get(),
-            'nazwa_uczelni': entry_nazwa_uczelni.get(),
-            'wydzial': entry_wydzial.get(),
-            'kierunek': entry_stud_kierunek.get(),
-            'grupa_dziekanska': entry_stud_grupa.get(),
-            'lokalizacja_uczelni': entry_lokalizacja_uczelni.get(),
-            'akademik': entry_stud_akademik.get()
-        }
+        student = Student(
+            entry_imie.get(),
+            entry_nazwisko.get(),
+            entry_nazwa_uczelni.get(),
+            entry_wydzial.get(),
+            entry_stud_kierunek.get(),
+            entry_stud_grupa.get(),
+            entry_lokalizacja_uczelni.get(),
+            entry_stud_akademik.get()
+        )
         studenci.append(student)
         update_student_filter()
         info_studenci()
@@ -311,7 +328,7 @@ def add_uczelnie():
     miasto = entry_ucz_miasto.get()
     powiat = entry_ucz_powiat.get()
     wojewodztwo = entry_ucz_wojew.get()
-    ucz = {'nazwa': nazwa, 'miasto': miasto, 'powiat': powiat, 'wojewodztwo': wojewodztwo}
+    ucz = Uczelnia(nazwa, miasto, powiat, wojewodztwo)
     uczelnie.append(ucz)
     if aktualny_mode == 'uczelnie':
         info_uczelnie()
@@ -323,10 +340,10 @@ def add_uczelnie():
 
 
 def update_uczelnia(i):
-    uczelnie[i]['nazwa'] = entry_ucz_nazwa.get()
-    uczelnie[i]['miasto'] = entry_ucz_miasto.get()
-    uczelnie[i]['powiat'] = entry_ucz_powiat.get()
-    uczelnie[i]['wojewodztwo'] = entry_ucz_wojew.get()
+    uczelnie[i].nazwa = entry_ucz_nazwa.get()
+    uczelnie[i].miasto = entry_ucz_miasto.get()
+    uczelnie[i].powiat = entry_ucz_powiat.get()
+    uczelnie[i].wojewodztwo = entry_ucz_wojew.get()
     info_uczelnie()
     button_dodaj.config(text="Dodaj obiekt",
                         command=lambda: add_pracownik(pracownicy) if aktualny_mode == 'Pracownicy' else add_uczelnie())
@@ -337,14 +354,14 @@ def update_uczelnia(i):
     entry_ucz_nazwa.focus()
 
 def update_student(i):
-    studenci[i]['imie'] = entry_imie.get()
-    studenci[i]['nazwisko'] = entry_nazwisko.get()
-    studenci[i]['nazwa_uczelni'] = entry_nazwa_uczelni.get()
-    studenci[i]['wydzial'] = entry_wydzial.get()
-    studenci[i]['kierunek'] = entry_stud_kierunek.get()
-    studenci[i]['grupa_dziekanska'] = entry_stud_grupa.get()
-    studenci[i]['lokalizacja_uczelni'] = entry_lokalizacja_uczelni.get()
-    studenci[i]['akademik'] = entry_stud_akademik.get()
+    studenci[i].imie = entry_imie.get()
+    studenci[i].nazwisko = entry_nazwisko.get()
+    studenci[i].nazwa_uczelni = entry_nazwa_uczelni.get()
+    studenci[i].wydzial = entry_wydzial.get()
+    studenci[i].kierunek = entry_stud_kierunek.get()
+    studenci[i].grupa_dziekanska = entry_stud_grupa.get()
+    studenci[i].lokalizacja_uczelni = entry_lokalizacja_uczelni.get()
+    studenci[i].akademik = entry_stud_akademik.get()
     update_student_filter()
     info_studenci()
     button_dodaj.config(text="Dodaj obiekt", command=add_student)
@@ -371,13 +388,13 @@ def delete_current():
             update_pracownicy_powiat_filter()
     elif aktualny_mode == 'uczelnie':
         selected = combo_filter.get()
-        filtered_indices = [idx for idx, ucz in enumerate(uczelnie) if selected == "Wszystkie" or ucz['wojewodztwo'] == selected]
+        filtered_indices = [idx for idx, ucz in enumerate(uczelnie) if selected == "Wszystkie" or ucz.wojewodztwo == selected]
         if i < len(filtered_indices):
             uczelnie.pop(filtered_indices[i])
             info_uczelnie()
     elif aktualny_mode == 'studenci':
         selected = combo_filter.get()
-        filtered_indices = [idx for idx, st in enumerate(studenci) if selected == "Wszystkie" or st.get('grupa_dziekanska', '') == selected]
+        filtered_indices = [idx for idx, st in enumerate(studenci) if selected == "Wszystkie" or st.grupa_dziekanska == selected]
         if i < len(filtered_indices):
             studenci.pop(filtered_indices[i])
             update_student_filter()
@@ -407,21 +424,21 @@ def edit_current():
     elif aktualny_mode == 'uczelnie':
         # Map filtered index to real index
         selected = combo_filter.get()
-        filtered_indices = [idx for idx, ucz in enumerate(uczelnie) if selected == "Wszystkie" or ucz['wojewodztwo'] == selected]
+        filtered_indices = [idx for idx, ucz in enumerate(uczelnie) if selected == "Wszystkie" or ucz.wojewodztwo == selected]
         if i < len(filtered_indices):
             real_idx = filtered_indices[i]
             entry_ucz_nazwa.delete(0, END)
             entry_ucz_miasto.delete(0, END)
             entry_ucz_powiat.delete(0, END)
             entry_ucz_wojew.delete(0, END)
-            entry_ucz_nazwa.insert(0, uczelnie[real_idx]['nazwa'])
-            entry_ucz_miasto.insert(0, uczelnie[real_idx]['miasto'])
-            entry_ucz_powiat.insert(0, uczelnie[real_idx]['powiat'])
-            entry_ucz_wojew.insert(0, uczelnie[real_idx]['wojewodztwo'])
+            entry_ucz_nazwa.insert(0, uczelnie[real_idx].nazwa)
+            entry_ucz_miasto.insert(0, uczelnie[real_idx].miasto)
+            entry_ucz_powiat.insert(0, uczelnie[real_idx].powiat)
+            entry_ucz_wojew.insert(0, uczelnie[real_idx].wojewodztwo)
             button_dodaj.config(text="Zapisz zmiany", command=lambda idx=real_idx: update_uczelnia(idx))
     elif aktualny_mode == 'studenci':
         selected = combo_filter.get()
-        filtered_indices = [idx for idx, st in enumerate(studenci) if selected == "Wszystkie" or st.get('grupa_dziekanska', '') == selected]
+        filtered_indices = [idx for idx, st in enumerate(studenci) if selected == "Wszystkie" or st.grupa_dziekanska == selected]
         if i < len(filtered_indices):
             real_idx = filtered_indices[i]
             entry_imie.delete(0, END)
@@ -432,14 +449,14 @@ def edit_current():
             entry_stud_grupa.delete(0, END)
             entry_lokalizacja_uczelni.delete(0, END)
             entry_stud_akademik.delete(0, END)
-            entry_imie.insert(0, studenci[real_idx]['imie'])
-            entry_nazwisko.insert(0, studenci[real_idx]['nazwisko'])
-            entry_nazwa_uczelni.insert(0, studenci[real_idx]['nazwa_uczelni'])
-            entry_wydzial.insert(0, studenci[real_idx]['wydzial'])
-            entry_stud_kierunek.insert(0, studenci[real_idx]['kierunek'])
-            entry_stud_grupa.insert(0, studenci[real_idx]['grupa_dziekanska'])
-            entry_lokalizacja_uczelni.insert(0, studenci[real_idx]['lokalizacja_uczelni'])
-            entry_stud_akademik.insert(0, studenci[real_idx]['akademik'])
+            entry_imie.insert(0, studenci[real_idx].imie)
+            entry_nazwisko.insert(0, studenci[real_idx].nazwisko)
+            entry_nazwa_uczelni.insert(0, studenci[real_idx].nazwa_uczelni)
+            entry_wydzial.insert(0, studenci[real_idx].wydzial)
+            entry_stud_kierunek.insert(0, studenci[real_idx].kierunek)
+            entry_stud_grupa.insert(0, studenci[real_idx].grupa_dziekanska)
+            entry_lokalizacja_uczelni.insert(0, studenci[real_idx].lokalizacja_uczelni)
+            entry_stud_akademik.insert(0, studenci[real_idx].akademik)
             button_dodaj.config(
                 text="Zapisz zmiany",
                 command=lambda idx=real_idx: update_student(idx)
