@@ -3,7 +3,6 @@ import tkintermapview
 
 from tkinter import ttk
 import psycopg2
-from folder.controller import remove_user, update_user
 
 WOJEWODZTWA = [
     "Dolnośląskie", "Kujawsko-pomorskie", "Lubelskie", "Lubuskie",
@@ -84,25 +83,8 @@ def pracownik_info(users_data_list) -> None:
                                           f"{user.name} {user.nazwisko} {user.nazwa_uczelni} {user.wydzial} {user.lokalizacja_uczelni}  {user.powiat}")
 
 
-def delete_pracownik(users_data: list):
-    i = list_box_lista_pracownikow.index(ACTIVE)
-    users_data[i].marker.delete()
-    users_data.pop(i)
-    pracownik_info(users_data)
-    update_pracownicy_powiat_filter()
 
 
-
-def edit_pracownik(users_data: list):
-    i = list_box_lista_pracownikow.index(ACTIVE)
-    entry_imie.insert(0, users_data[i].name)
-    entry_nazwa_uczelni.insert(0, users_data[i].nazwa_uczelni)
-    entry_nazwisko.insert(0, users_data[i].nazwisko)
-    entry_wydzial.insert(0, users_data[i].wydzial)
-    entry_powiat_prac.insert(0, users_data[i].powiat)
-    entry_lokalizacja_uczelni.insert(0, users_data[i].lokalizacja_uczelni)
-
-    button_dodaj.config(text="Zapisz zmiany", command=lambda: update_pracownik(users_data, i))
 
 
 def update_pracownik(users_data: list, i):
@@ -138,6 +120,7 @@ def apply_filter():
         apply_studenci_filter()
     elif aktualny_mode == 'Pracownicy':
         apply_pracownicy_powiat_filter()
+
 def update_pracownicy_powiat_filter():
     powiaty = sorted(set(p.powiat for p in pracownicy if getattr(p, 'powiat', None)))
     combo_filter['values'] = ["Wszystkie"] + powiaty
@@ -181,6 +164,7 @@ def apply_studenci_filter():
 def update_student_filter():
     grupy = sorted(set(st.get('grupa_dziekanska', '') for st in studenci if st.get('grupa_dziekanska')))
     combo_filter['values'] = ["Wszystkie"] + grupy
+    combo_filter.set("Wszystkie")
 
 def show_pracownicy_form():
         label_imie.grid()
@@ -319,41 +303,7 @@ def add_student():
         entry_lokalizacja_uczelni.delete(0, END)
         entry_stud_akademik.delete(0, END)
         entry_imie.focus()
-        info_studenci()
-        entry_imie.delete(0, END)
-        entry_nazwisko.delete(0, END)
-        entry_nazwa_uczelni.delete(0, END)
-        entry_wydzial.delete(0, END)
-        entry_stud_kierunek.delete(0, END)
-        entry_stud_grupa.delete(0, END)
-        entry_lokalizacja_uczelni.delete(0, END)
-        entry_stud_akademik.delete(0, END)
-        entry_imie.focus()
-        button_dodaj.grid(row=8, column=0, columnspan=2, sticky="ew")
-
-def add_student():
-    student = {
-        'imie': entry_imie.get(),
-        'nazwisko': entry_nazwisko.get(),
-        'nazwa_uczelni': entry_nazwa_uczelni.get(),
-        'wydzial': entry_wydzial.get(),
-        'kierunek': entry_stud_kierunek.get(),
-        'grupa_dziekanska': entry_stud_grupa.get(),
-        'lokalizacja_uczelni': entry_lokalizacja_uczelni.get(),
-        'akademik': entry_stud_akademik.get()
-    }
-    studenci.append(student)
-    update_student_filter()
-    info_studenci()
-    entry_imie.delete(0, END)
-    entry_nazwisko.delete(0, END)
-    entry_nazwa_uczelni.delete(0, END)
-    entry_wydzial.delete(0, END)
-    entry_stud_kierunek.delete(0, END)
-    entry_stud_grupa.delete(0, END)
-    entry_lokalizacja_uczelni.delete(0, END)
-    entry_stud_akademik.delete(0, END)
-    entry_imie.focus()
+        button_dodaj.grid(row=9, column=0, columnspan=2, sticky="ew")
 
 
 def add_uczelnie():
@@ -411,10 +361,14 @@ def update_student(i):
 def delete_current():
     i = list_box_lista_pracownikow.index(ACTIVE)
     if aktualny_mode == 'Pracownicy':
-        pracownicy[i].marker.delete()
-        pracownicy.pop(i)
-        pracownik_info(pracownicy)
-        update_pracownicy_powiat_filter()
+        selected = combo_filter.get()
+        filtered_indices = [idx for idx, p in enumerate(pracownicy) if selected == "Wszystkie" or p.powiat == selected]
+        if i < len(filtered_indices):
+            real_idx = filtered_indices[i]
+            pracownicy[real_idx].marker.delete()
+            pracownicy.pop(real_idx)
+            pracownik_info(pracownicy)
+            update_pracownicy_powiat_filter()
     elif aktualny_mode == 'uczelnie':
         selected = combo_filter.get()
         filtered_indices = [idx for idx, ucz in enumerate(uczelnie) if selected == "Wszystkie" or ucz['wojewodztwo'] == selected]
@@ -433,7 +387,23 @@ def delete_current():
 def edit_current():
     i = list_box_lista_pracownikow.index(ACTIVE)
     if aktualny_mode == 'Pracownicy':
-        edit_pracownik(pracownicy)
+        selected = combo_filter.get()
+        filtered_indices = [idx for idx, p in enumerate(pracownicy) if selected == "Wszystkie" or p.powiat == selected]
+        if i < len(filtered_indices):
+            real_idx = filtered_indices[i]
+            entry_imie.delete(0, END)
+            entry_nazwa_uczelni.delete(0, END)
+            entry_nazwisko.delete(0, END)
+            entry_wydzial.delete(0, END)
+            entry_powiat_prac.delete(0, END)
+            entry_lokalizacja_uczelni.delete(0, END)
+            entry_imie.insert(0, pracownicy[real_idx].name)
+            entry_nazwa_uczelni.insert(0, pracownicy[real_idx].nazwa_uczelni)
+            entry_nazwisko.insert(0, pracownicy[real_idx].nazwisko)
+            entry_wydzial.insert(0, pracownicy[real_idx].wydzial)
+            entry_powiat_prac.insert(0, pracownicy[real_idx].powiat)
+            entry_lokalizacja_uczelni.insert(0, pracownicy[real_idx].lokalizacja_uczelni)
+            button_dodaj.config(text="Zapisz zmiany", command=lambda idx=real_idx: update_pracownik(pracownicy, idx))
     elif aktualny_mode == 'uczelnie':
         # Map filtered index to real index
         selected = combo_filter.get()
@@ -515,7 +485,6 @@ def set_mode(mode: str):
 
 
 
-
 root = Tk()
 root.title("Mapbook")
 root.geometry("1450x800")
@@ -531,11 +500,6 @@ ramka_mapa = Frame(root)
 
 ramka_lista_pracownikow.grid(row=0, column=1, sticky="nsew")
 ramka_formularz.grid(row=2, column=1, sticky="nsew")
-# Right panel layout
-#ramka_lista_pracownikow.grid(row=0, column=1, sticky="nsew")
-#label_filter.grid(row=1, column=1, sticky="w", padx=10, pady=(10, 0))
-#combo_filter.grid(row=1, column=1, sticky="e", padx=150, pady=(10, 0))
-#ramka_formularz.grid(row=2, column=1, sticky="sew", padx=10, pady=10)  # 'sew' to stick to bottom right
 
 ramka_mapa.grid(row=0, column=0, rowspan=3, sticky="nsew")
 
@@ -546,7 +510,6 @@ ramka_lista_pracownikow.columnconfigure(0, weight=1)
 ramka_lista_pracownikow.rowconfigure(1, weight=1)
 
 ramka_formularz.columnconfigure(1, weight=1)
-
 
 
 # Configure row weights to push the form to the bottom
@@ -663,7 +626,6 @@ label_ucz_wojew.grid(row=4, column=0, sticky=W)
 entry_ucz_wojew.grid(row=4, column=1, sticky="ew")
 
 
-
 label_stud_kierunek = Label(ramka_formularz, text="Kierunek: ")
 entry_stud_kierunek = Entry(ramka_formularz)
 label_stud_grupa = Label(ramka_formularz, text="Grupa dziekańska: ")
@@ -672,11 +634,10 @@ label_stud_akademik = Label(ramka_formularz, text="Akademik: ")
 entry_stud_akademik = Entry(ramka_formularz)
 
 
-
-label_stud_kierunek.grid(row=7, column=0, sticky=W)
-entry_stud_kierunek.grid(row=7, column=1, sticky="ew")
-label_stud_grupa.grid(row=6, column=0, sticky=W)
-entry_stud_grupa.grid(row=6, column=1, sticky="ew")
+label_stud_kierunek.grid(row=6, column=0, sticky=W)
+entry_stud_kierunek.grid(row=6, column=1, sticky="ew")
+label_stud_grupa.grid(row=7, column=0, sticky=W)
+entry_stud_grupa.grid(row=7, column=1, sticky="ew")
 label_stud_akademik.grid(row=8, column=0, sticky=W)
 entry_stud_akademik.grid(row=8, column=1, sticky="ew")
 
