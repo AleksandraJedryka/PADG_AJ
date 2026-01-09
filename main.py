@@ -281,6 +281,43 @@ def apply_studenci_filter():
                 idx,
                 f"{st.imie} {st.nazwisko} {st.nazwa_uczelni} {st.wydzial} {st.kierunek} {st.grupa_dziekanska} {st.lokalizacja_uczelni} {st.akademik}"
             )
+    # synchronize student markers with selected group
+    update_student_markers(selected)
+
+
+def update_student_markers(selected=None):
+    """Show only markers for students matching selected grupa_dziekanska.
+    If selected is None, read from combo_filter.
+    Non-matching markers are deleted (set to None); matching markers are (re)created.
+    """
+    if selected is None:
+        try:
+            selected = combo_filter.get()
+        except Exception:
+            selected = "Wszystkie"
+
+    for s in studenci:
+        try:
+            matches = (selected == "Wszystkie" or s.grupa_dziekanska == selected)
+        except Exception:
+            matches = (selected == "Wszystkie")
+
+        if matches:
+            if getattr(s, 'marker', None) is None:
+                if getattr(s, 'coords', None):
+                    s.marker = map_widget.set_marker(s.coords[0], s.coords[1], text=getattr(s, 'imie', ''))
+            else:
+                try:
+                    s.marker.set_position(s.coords[0], s.coords[1])
+                except Exception:
+                    pass
+        else:
+            if getattr(s, 'marker', None) is not None:
+                try:
+                    s.marker.delete()
+                except Exception:
+                    pass
+                s.marker = None
 
 
 def update_student_filter():
@@ -427,6 +464,8 @@ def add_student():
     studenci.append(student)
     update_student_filter()
     info_studenci()
+    # keep student markers in sync with current group filter
+    update_student_markers()
     entry_st_imie.delete(0, END)
     entry_st_nazwisko.delete(0, END)
     entry_st_nazwa_uczelni.delete(0, END)
@@ -490,6 +529,8 @@ def update_student(i):
     studenci[i].marker = map_widget.set_marker(studenci[i].coords[0], studenci[i].coords[1], text=studenci[i].imie)
     update_student_filter()
     info_studenci()
+    # update markers to respect current group filter
+    update_student_markers()
     button_dodaj.config(text="Dodaj obiekt", command=add_student)
     entry_st_imie.delete(0, END)
     entry_st_nazwisko.delete(0, END)
