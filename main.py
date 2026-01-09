@@ -199,10 +199,27 @@ def info_uczelnie():
 def apply_uczelnie_filter():
     selected = combo_filter.get()
     list_box_lista_pracownikow.delete(0, END)
-    for idx, ucz in enumerate(uczelnie):
+    # First, clear all existing university markers from the map (we'll recreate only matching ones)
+    for ucz in uczelnie:
+        try:
+            if hasattr(ucz, 'marker') and ucz.marker is not None:
+                ucz.marker.delete()
+        except Exception:
+            pass
+        ucz.marker = None
+
+    # Then add markers only for matching universities and populate the listbox
+    list_idx = 0
+    for ucz in uczelnie:
         if selected == "Wszystkie" or ucz.wojewodztwo == selected:
-            list_box_lista_pracownikow.insert(idx,
+            list_box_lista_pracownikow.insert(list_idx,
                                               f"{ucz.nazwa} {ucz.miasto} {ucz.powiat} {ucz.wojewodztwo} {ucz.lokalizacja_uczelni}")
+            # create marker on the map for this university
+            try:
+                ucz.marker = map_widget.set_marker(ucz.coords[0], ucz.coords[1], text=ucz.nazwa)
+            except Exception:
+                ucz.marker = None
+            list_idx += 1
 
 
 def info_studenci():
