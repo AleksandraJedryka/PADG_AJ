@@ -125,6 +125,8 @@ def add_pracownik(users_data: list) -> None:
     print(users_data)
     pracownik_info(users_data)
     update_pracownicy_powiat_filter()
+    # keep markers in sync with current powiat filter
+    update_pracownicy_markers()
     entry_imie.delete(0, END)
     entry_nazwa_uczelni.delete(0, END)
     entry_nazwisko.delete(0, END)
@@ -155,6 +157,7 @@ def update_pracownik(users_data: list, i):
 
     pracownik_info(users_data)
     update_pracownicy_powiat_filter()
+    update_pracownicy_markers()
 
     button_dodaj.config(text="Dodaj obiekt", command=lambda: add_pracownik(pracownicy))
     entry_imie.delete(0, END)
@@ -188,6 +191,49 @@ def apply_pracownicy_powiat_filter():
         if selected == "Wszystkie" or p.powiat == selected:
             list_box_lista_pracownikow.insert(idx,
                                               f"{p.name} {p.nazwisko} {p.nazwa_uczelni} {p.wydzial} {p.powiat} {p.lokalizacja_uczelni}")
+
+    # synchronize markers on the map with the current powiat filter
+    update_pracownicy_markers(selected)
+
+
+def update_pracownicy_markers(selected=None):
+    """Show only markers for pracownicy matching selected powiat.
+    If selected is None, read from combo_filter.
+    Markers for non-matching items are deleted (set to None) and recreated
+    when they match again.
+    """
+    if selected is None:
+        try:
+            selected = combo_filter.get()
+        except Exception:
+            selected = "Wszystkie"
+
+    for p in pracownicy:
+        try:
+            matches = (selected == "Wszystkie" or p.powiat == selected)
+        except Exception:
+            matches = (selected == "Wszystkie")
+
+        if matches:
+            # ensure marker exists
+            if getattr(p, 'marker', None) is None:
+                # recreate marker at stored coords
+                if getattr(p, 'coords', None):
+                    p.marker = map_widget.set_marker(p.coords[0], p.coords[1], text=getattr(p, 'name', ''))
+            else:
+                # marker exists - keep it (optionally could update text/position)
+                try:
+                    p.marker.set_position(p.coords[0], p.coords[1])
+                except Exception:
+                    pass
+        else:
+            # remove marker from map but keep object fields
+            if getattr(p, 'marker', None) is not None:
+                try:
+                    p.marker.delete()
+                except Exception:
+                    pass
+                p.marker = None
 
 
 def info_uczelnie():
