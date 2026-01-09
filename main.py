@@ -379,7 +379,7 @@ def add_uczelnie():
     entry_ucz_nazwa.delete(0, END)
     entry_ucz_miasto.delete(0, END)
     entry_ucz_powiat.delete(0, END)
-    entry_ucz_wojew.delete(0, END)
+    entry_ucz_wojew.set("")
 
     entry_ucz_nazwa.focus()
 
@@ -399,7 +399,7 @@ def update_uczelnia(i):
     entry_ucz_nazwa.delete(0, END)
     entry_ucz_miasto.delete(0, END)
     entry_ucz_powiat.delete(0, END)
-    entry_ucz_wojew.delete(0, END)
+    entry_ucz_wojew.set("")
     entry_ucz_nazwa.focus()
 
 
@@ -491,11 +491,11 @@ def edit_current():
             entry_ucz_nazwa.delete(0, END)
             entry_ucz_miasto.delete(0, END)
             entry_ucz_powiat.delete(0, END)
-            entry_ucz_wojew.delete(0, END)
+            entry_ucz_wojew.set("")
             entry_ucz_nazwa.insert(0, uczelnie[real_idx].nazwa)
             entry_ucz_miasto.insert(0, uczelnie[real_idx].miasto)
             entry_ucz_powiat.insert(0, uczelnie[real_idx].powiat)
-            entry_ucz_wojew.insert(0, uczelnie[real_idx].wojewodztwo)
+            entry_ucz_wojew.set(uczelnie[real_idx].wojewodztwo)
             button_dodaj.config(text="Zapisz zmiany", command=lambda idx=real_idx: update_uczelnia(idx))
     elif aktualny_mode == 'studenci':
         selected = combo_filter.get()
@@ -564,7 +564,7 @@ def set_mode(mode: str):
 
 
 root = Tk()
-root.title("Mapbook")
+root.title("Geoportal Uczelni")
 root.geometry("1450x800")
 root.columnconfigure(0, weight=3)
 root.columnconfigure(1, weight=1)
@@ -685,7 +685,9 @@ label_ucz_powiat = Label(ramka_formularz, text="Powiat: ")
 entry_ucz_powiat = Entry(ramka_formularz)
 
 label_ucz_wojew = Label(ramka_formularz, text="Wojewodztwo: ")
-entry_ucz_wojew = Entry(ramka_formularz)
+# Use a readonly Combobox so user picks województwo from the predefined list
+entry_ucz_wojew = ttk.Combobox(ramka_formularz, values=WOJEWODZTWA, state="readonly")
+entry_ucz_wojew.set("")
 
 # lokalizacja uczelni removed from form
 
