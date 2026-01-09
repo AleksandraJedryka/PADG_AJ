@@ -270,6 +270,31 @@ def update_pracownicy_markers(selected_pow=None, selected_ucz=None):
                 p.marker = None
 
 
+def clear_all_markers():
+    """Delete all markers for pracownicy, uczelnie and studenci."""
+    for p in pracownicy:
+        if getattr(p, 'marker', None) is not None:
+            try:
+                p.marker.delete()
+            except Exception:
+                pass
+            p.marker = None
+    for u in uczelnie:
+        if getattr(u, 'marker', None) is not None:
+            try:
+                u.marker.delete()
+            except Exception:
+                pass
+            u.marker = None
+    for s in studenci:
+        if getattr(s, 'marker', None) is not None:
+            try:
+                s.marker.delete()
+            except Exception:
+                pass
+            s.marker = None
+
+
 def info_uczelnie():
     combo_filter['values'] = ["Wszystkie"] + WOJEWODZTWA
     combo_filter.set("Wszystkie")
@@ -699,6 +724,11 @@ def edit_current():
 def set_mode(mode: str):
     global aktualny_mode
     aktualny_mode = mode
+    # remove markers from previous mode so map shows only relevant markers
+    try:
+        clear_all_markers()
+    except Exception:
+        pass
     if mode == 'uczelnie':
         label_lista_pracownikow.config(text='Lista Uczelni')
         label_formularz.config(text='Formularz - uczelnie ')
