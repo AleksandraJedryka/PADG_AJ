@@ -125,7 +125,8 @@ def add_pracownik(users_data: list) -> None:
     print(users_data)
     pracownik_info(users_data)
     update_pracownicy_powiat_filter()
-    # keep markers in sync with current powiat filter
+    update_pracownicy_uczelnia_filter()
+    # keep markers in sync with current powiat + uczelnia filter
     update_pracownicy_markers()
     entry_imie.delete(0, END)
     entry_nazwa_uczelni.delete(0, END)
@@ -157,6 +158,7 @@ def update_pracownik(users_data: list, i):
 
     pracownik_info(users_data)
     update_pracownicy_powiat_filter()
+    update_pracownicy_uczelnia_filter()
     update_pracownicy_markers()
 
     button_dodaj.config(text="Dodaj obiekt", command=lambda: add_pracownik(pracownicy))
@@ -179,55 +181,87 @@ def apply_filter():
 
 
 def update_pracownicy_powiat_filter():
+    # preserve current selection if possible
+    try:
+        current = combo_filter.get()
+    except Exception:
+        current = "Wszystkie"
     powiaty = sorted(set(p.powiat for p in pracownicy if getattr(p, 'powiat', None)))
-    combo_filter['values'] = ["Wszystkie"] + powiaty
-    combo_filter.set("Wszystkie")
+    values = ["Wszystkie"] + powiaty
+    combo_filter['values'] = values
+    if current in values:
+        combo_filter.set(current)
+    else:
+        combo_filter.set("Wszystkie")
+
+
+def update_pracownicy_uczelnia_filter():
+    # preserve current selection if possible
+    try:
+        current = combo_filter_ucz.get()
+    except Exception:
+        current = "Wszystkie"
+    uczelnie_nazwy = sorted(set(p.nazwa_uczelni for p in pracownicy if getattr(p, 'nazwa_uczelni', None)))
+    values = ["Wszystkie"] + uczelnie_nazwy
+    combo_filter_ucz['values'] = values
+    if current in values:
+        combo_filter_ucz.set(current)
+    else:
+        combo_filter_ucz.set("Wszystkie")
 
 
 def apply_pracownicy_powiat_filter():
-    selected = combo_filter.get()
+    selected_pow = combo_filter.get()
+    selected_ucz = combo_filter_ucz.get() if combo_filter_ucz and combo_filter_ucz.get() else "Wszystkie"
     list_box_lista_pracownikow.delete(0, END)
     for idx, p in enumerate(pracownicy):
-        if selected == "Wszystkie" or p.powiat == selected:
+        if (selected_pow == "Wszystkie" or p.powiat == selected_pow) and (
+                selected_ucz == "Wszystkie" or p.nazwa_uczelni == selected_ucz):
             list_box_lista_pracownikow.insert(idx,
                                               f"{p.name} {p.nazwisko} {p.nazwa_uczelni} {p.wydzial} {p.powiat} {p.lokalizacja_uczelni}")
 
-    # synchronize markers on the map with the current powiat filter
-    update_pracownicy_markers(selected)
+    # synchronize markers on the map with the current powiat + uczelnia filters
+    update_pracownicy_markers(selected_pow, selected_ucz)
 
 
-def update_pracownicy_markers(selected=None):
-    """Show only markers for pracownicy matching selected powiat.
-    If selected is None, read from combo_filter.
-    Markers for non-matching items are deleted (set to None) and recreated
-    when they match again.
+def update_pracownicy_markers(selected_pow=None, selected_ucz=None):
+    """Show only markers for pracownicy matching selected powiat and uczelnia.
+    If a selection is None, read from the corresponding combobox.
+    Non-matching markers are deleted (set to None) and recreated when matching.
     """
-    if selected is None:
+    if selected_pow is None:
         try:
-            selected = combo_filter.get()
+            selected_pow = combo_filter.get()
         except Exception:
-            selected = "Wszystkie"
+            selected_pow = "Wszystkie"
+    if selected_ucz is None:
+        try:
+            selected_ucz = combo_filter_ucz.get()
+        except Exception:
+            selected_ucz = "Wszystkie"
 
     for p in pracownicy:
         try:
-            matches = (selected == "Wszystkie" or p.powiat == selected)
+            matches_pow = (selected_pow == "Wszystkie" or p.powiat == selected_pow)
         except Exception:
-            matches = (selected == "Wszystkie")
+            matches_pow = (selected_pow == "Wszystkie")
+        try:
+            matches_ucz = (selected_ucz == "Wszystkie" or p.nazwa_uczelni == selected_ucz)
+        except Exception:
+            matches_ucz = (selected_ucz == "Wszystkie")
+
+        matches = matches_pow and matches_ucz
 
         if matches:
-            # ensure marker exists
             if getattr(p, 'marker', None) is None:
-                # recreate marker at stored coords
                 if getattr(p, 'coords', None):
                     p.marker = map_widget.set_marker(p.coords[0], p.coords[1], text=getattr(p, 'name', ''))
             else:
-                # marker exists - keep it (optionally could update text/position)
                 try:
                     p.marker.set_position(p.coords[0], p.coords[1])
                 except Exception:
                     pass
         else:
-            # remove marker from map but keep object fields
             if getattr(p, 'marker', None) is not None:
                 try:
                     p.marker.delete()
@@ -546,14 +580,30 @@ def update_student(i):
 def delete_current():
     i = list_box_lista_pracownikow.index(ACTIVE)
     if aktualny_mode == 'Pracownicy':
-        selected = combo_filter.get()
-        filtered_indices = [idx for idx, p in enumerate(pracownicy) if selected == "Wszystkie" or p.powiat == selected]
+        selected_pow = combo_filter.get()
+        try:
+            selected_ucz = combo_filter_ucz.get()
+        except Exception:
+            selected_ucz = "Wszystkie"
+        filtered_indices = [idx for idx, p in enumerate(pracownicy)
+                            if (selected_pow == "Wszystkie" or p.powiat == selected_pow)
+                            and (selected_ucz == "Wszystkie" or p.nazwa_uczelni == selected_ucz)]
         if i < len(filtered_indices):
             real_idx = filtered_indices[i]
-            pracownicy[real_idx].marker.delete()
+            if getattr(pracownicy[real_idx], 'marker', None) is not None:
+                try:
+                    pracownicy[real_idx].marker.delete()
+                except Exception:
+                    pass
             pracownicy.pop(real_idx)
             pracownik_info(pracownicy)
             update_pracownicy_powiat_filter()
+            update_pracownicy_uczelnia_filter()
+            # after filters update, re-sync markers so visible markers match selection
+            try:
+                update_pracownicy_markers()
+            except Exception:
+                pass
     elif aktualny_mode == 'uczelnie':
         selected = combo_filter.get()
         filtered_indices = [idx for idx, ucz in enumerate(uczelnie) if
@@ -578,8 +628,14 @@ def delete_current():
 def edit_current():
     i = list_box_lista_pracownikow.index(ACTIVE)
     if aktualny_mode == 'Pracownicy':
-        selected = combo_filter.get()
-        filtered_indices = [idx for idx, p in enumerate(pracownicy) if selected == "Wszystkie" or p.powiat == selected]
+        selected_pow = combo_filter.get()
+        try:
+            selected_ucz = combo_filter_ucz.get()
+        except Exception:
+            selected_ucz = "Wszystkie"
+        filtered_indices = [idx for idx, p in enumerate(pracownicy)
+                            if (selected_pow == "Wszystkie" or p.powiat == selected_pow)
+                            and (selected_ucz == "Wszystkie" or p.nazwa_uczelni == selected_ucz)]
         if i < len(filtered_indices):
             real_idx = filtered_indices[i]
             entry_imie.delete(0, END)
@@ -595,6 +651,7 @@ def edit_current():
             entry_powiat_prac.insert(0, pracownicy[real_idx].powiat)
             entry_lokalizacja_uczelni.insert(0, pracownicy[real_idx].lokalizacja_uczelni)
             button_dodaj.config(text="Zapisz zmiany", command=lambda idx=real_idx: update_pracownik(pracownicy, idx))
+
     elif aktualny_mode == 'uczelnie':
         # Map filtered index to real index
         selected = combo_filter.get()
@@ -650,8 +707,14 @@ def set_mode(mode: str):
         label_filter.config(text="Filtruj województwo:")
         combo_filter['values'] = ["Wszystkie"] + WOJEWODZTWA
         combo_filter.set("Wszystkie")
-        label_filter.grid(row=1, column=1, sticky="w", padx=10, pady=(10, 0))
-        combo_filter.grid(row=1, column=1, sticky="e", padx=150, pady=(10, 0))
+        # hide pracownicy university filter when in uczelnie mode
+        try:
+            label_filter_ucz.grid_remove()
+            combo_filter_ucz.grid_remove()
+        except Exception:
+            pass
+        label_filter.grid(in_=ramka_filtry, row=0, column=0, sticky="w", padx=10, pady=(0, 0))
+        combo_filter.grid(in_=ramka_filtry, row=0, column=1, sticky="w", padx=10, pady=(0, 0))
         info_uczelnie()
     elif mode == 'studenci':
         label_lista_pracownikow.config(text='Lista Studenci')
@@ -661,8 +724,14 @@ def set_mode(mode: str):
         label_filter.config(text="Filtruj grupę dziekańską:")
         update_student_filter()
         combo_filter.set("Wszystkie")
-        label_filter.grid(row=1, column=1, sticky="w", padx=10, pady=(10, 0))
-        combo_filter.grid(row=1, column=1, sticky="e", padx=150, pady=(10, 0))
+        # hide pracownicy university filter when in studenci mode
+        try:
+            label_filter_ucz.grid_remove()
+            combo_filter_ucz.grid_remove()
+        except Exception:
+            pass
+        label_filter.grid(in_=ramka_filtry, row=0, column=0, sticky="w", padx=10, pady=(0, 0))
+        combo_filter.grid(in_=ramka_filtry, row=0, column=1, sticky="w", padx=10, pady=(0, 0))
         info_studenci()
     else:
         label_lista_pracownikow.config(text='Lista Pracowników')
@@ -671,9 +740,15 @@ def set_mode(mode: str):
         button_dodaj.config(text="Dodaj obiekt", command=lambda: add_pracownik(pracownicy))
         label_filter.config(text="Filtruj powiat:")
         update_pracownicy_powiat_filter()
+        # populate and show the university-name filter for pracownicy
+        update_pracownicy_uczelnia_filter()
+        combo_filter_ucz.set("Wszystkie")
+        label_filter_ucz.config(text="Filtruj uczelnię:")
+        label_filter_ucz.grid(in_=ramka_filtry, row=1, column=0, sticky="w", padx=10, pady=(5, 0))
+        combo_filter_ucz.grid(in_=ramka_filtry, row=1, column=1, sticky="w", padx=10, pady=(5, 0))
         combo_filter.set("Wszystkie")
-        label_filter.grid(row=1, column=1, sticky="w", padx=10, pady=(10, 0))
-        combo_filter.grid(row=1, column=1, sticky="e", padx=150, pady=(10, 0))
+        label_filter.grid(in_=ramka_filtry, row=0, column=0, sticky="w", padx=10, pady=(0, 0))
+        combo_filter.grid(in_=ramka_filtry, row=0, column=1, sticky="w", padx=10, pady=(0, 0))
         apply_pracownicy_powiat_filter()
 
 
@@ -684,16 +759,19 @@ root.columnconfigure(0, weight=3)
 root.columnconfigure(1, weight=1)
 root.rowconfigure(0, weight=1)
 root.rowconfigure(1, weight=0)
-root.rowconfigure(2, weight=1)
+root.rowconfigure(2, weight=0)
+root.rowconfigure(3, weight=1)
 
 ramka_lista_pracownikow = Frame(root)
 ramka_formularz = Frame(root)
 ramka_mapa = Frame(root)
+ramka_filtry = Frame(root)
 
 ramka_lista_pracownikow.grid(row=0, column=1, sticky="nsew")
-ramka_formularz.grid(row=2, column=1, sticky="nsew")
+ramka_filtry.grid(row=2, column=1, sticky="nsew", padx=10, pady=(10, 0))
+ramka_formularz.grid(row=3, column=1, sticky="nsew")
 
-ramka_mapa.grid(row=0, column=0, rowspan=3, sticky="nsew")
+ramka_mapa.grid(row=0, column=0, rowspan=4, sticky="nsew")
 
 ramka_mapa.rowconfigure(0, weight=1)
 ramka_mapa.columnconfigure(0, weight=1)
@@ -702,11 +780,13 @@ ramka_lista_pracownikow.columnconfigure(0, weight=1)
 ramka_lista_pracownikow.rowconfigure(1, weight=1)
 
 ramka_formularz.columnconfigure(1, weight=1)
+ramka_filtry.columnconfigure(1, weight=1)
 
 # Configure row weights to push the form to the bottom
 root.rowconfigure(0, weight=0)  # List grows
 root.rowconfigure(1, weight=0)  # Spacer fixed
-root.rowconfigure(2, weight=1)  # Form stays at bottom
+root.rowconfigure(2, weight=0)  # Filters row
+root.rowconfigure(3, weight=1)  # Form stays at bottom
 
 # RAMKA_LISTA_Pracowników
 
@@ -717,11 +797,22 @@ label_lista_pracownikow.grid(row=0, column=0, columnspan=2, sticky="ew")
 label_filter = Label(root)
 combo_filter = ttk.Combobox(root, state="readonly")
 combo_filter.bind("<<ComboboxSelected>>", lambda e: apply_filter())
+label_filter_ucz = Label(root)
+combo_filter_ucz = ttk.Combobox(root, state="readonly")
+combo_filter_ucz.bind("<<ComboboxSelected>>", lambda e: apply_filter())
 
 # Ustaw filtr i combobox na podstawie aktualnego trybu
 if aktualny_mode == 'Pracownicy':
     label_filter.config(text="Filtruj powiat:")
     update_pracownicy_powiat_filter()
+    # Ensure the university-name filter is visible and populated on startup for Pracownicy
+    try:
+        update_pracownicy_uczelnia_filter()
+        label_filter_ucz.config(text="Filtruj uczelnię:")
+        label_filter_ucz.grid(in_=ramka_filtry, row=1, column=0, sticky="w", padx=10, pady=(5, 0))
+        combo_filter_ucz.grid(in_=ramka_filtry, row=1, column=1, sticky="w", padx=10, pady=(5, 0))
+    except Exception:
+        pass
 elif aktualny_mode == 'uczelnie':
     label_filter.config(text="Filtruj województwo:")
     combo_filter['values'] = ["Wszystkie"] + WOJEWODZTWA
@@ -730,11 +821,11 @@ elif aktualny_mode == 'studenci':
     label_filter.config(text="Filtruj grupę dziekańską:")
     update_student_filter()
 
+# (university filter is initialized above for Pracownicy)
+
 # Now you can place them in the grid
-ramka_lista_pracownikow.grid(row=0, column=1, sticky="nsew")
-label_filter.grid(row=1, column=1, sticky="w", padx=10, pady=(10, 0))
-combo_filter.grid(row=1, column=1, sticky="e", padx=150, pady=(10, 0))
-ramka_formularz.grid(row=2, column=1, sticky="sew", padx=10, pady=10)
+label_filter.grid(in_=ramka_filtry, row=0, column=0, sticky="w", padx=10, pady=(0, 0))
+combo_filter.grid(in_=ramka_filtry, row=0, column=1, sticky="w", padx=10, pady=(0, 0))
 
 button_zmien_mode = Button(ramka_lista_pracownikow, text="Uczelnie", command=lambda: set_mode('uczelnie'))
 button_zmien_mode.grid(row=0, column=2, sticky="ew")
