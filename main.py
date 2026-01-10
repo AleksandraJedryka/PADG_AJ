@@ -787,6 +787,8 @@ root.title("Geoportal Uczelni")
 root.geometry("1450x800")
 root.columnconfigure(0, weight=3)
 root.columnconfigure(1, weight=1)
+# keep the right column stable: enforce a minimum width so it doesn't shrink/expand
+root.columnconfigure(1, minsize=420)
 root.rowconfigure(0, weight=1)
 root.rowconfigure(1, weight=0)
 root.rowconfigure(2, weight=0)
@@ -796,6 +798,15 @@ ramka_lista_pracownikow = Frame(root)
 ramka_formularz = Frame(root)
 ramka_mapa = Frame(root)
 ramka_filtry = Frame(root)
+
+# Disable geometry propagation for right-side frames so showing/hiding widgets
+# doesn't resize the column. Give reasonable fixed heights.
+ramka_lista_pracownikow.grid_propagate(False)
+ramka_lista_pracownikow.configure(height=300)
+ramka_filtry.grid_propagate(False)
+ramka_filtry.configure(height=80)
+ramka_formularz.grid_propagate(False)
+ramka_formularz.configure(height=340)
 
 ramka_lista_pracownikow.grid(row=0, column=1, sticky="nsew")
 ramka_filtry.grid(row=2, column=1, sticky="nsew", padx=10, pady=(10, 0))
