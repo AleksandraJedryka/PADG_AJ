@@ -92,16 +92,13 @@ def update_pracownik(users_data: list, i):
     users_data[i].nazwa_uczelni = entry_nazwa_uczelni.get()
     users_data[i].powiat = entry_powiat_prac.get()
     users_data[i].lokalizacja_uczelni = entry_lokalizacja_uczelni.get()
-
     users_data[i].coords = users_data[i].get_coordinates()
     users_data[i].marker.set_position(users_data[i].coords[0], users_data[i].coords[1])
     users_data[i].marker.set_text(users_data[i].name)
-
     pracownik_info(users_data)
     update_pracownicy_powiat_filter()
     update_pracownicy_uczelnia_filter()
     update_pracownicy_markers()
-
     button_dodaj.config(text="Dodaj obiekt", command=lambda: add_pracownik(pracownicy))
     entry_imie.delete(0, END)
     entry_nazwa_uczelni.delete(0, END)
@@ -116,7 +113,7 @@ def apply_filter():
     elif aktualny_mode == 'studenci':
         apply_studenci_filter()
     elif aktualny_mode == 'Pracownicy':
-        apply_pracownicy_powiat_filter()
+        apply_pracownicy_pow_ucz_filter()
 
 
 def update_pracownicy_powiat_filter():
@@ -151,7 +148,7 @@ def update_pracownicy_uczelnia_filter():
         combo_filter_ucz.set("Wszystkie")
 
 
-def apply_pracownicy_powiat_filter():
+def apply_pracownicy_pow_ucz_filter():
     selected_pow = combo_filter.get()
     selected_ucz = combo_filter_ucz.get() if combo_filter_ucz and combo_filter_ucz.get() else "Wszystkie"
     list_box_lista_pracownikow.delete(0, END)
@@ -159,7 +156,6 @@ def apply_pracownicy_powiat_filter():
         if (selected_pow == "Wszystkie" or p.powiat == selected_pow) and (
                 selected_ucz == "Wszystkie" or p.nazwa_uczelni == selected_ucz):
             list_box_lista_pracownikow.insert(idx, f"{p.name} {p.nazwa_uczelni} {p.powiat} {p.lokalizacja_uczelni}")
-
     update_pracownicy_markers(selected_pow, selected_ucz)
 
 
@@ -347,14 +343,11 @@ def show_uczelnie_form():
     entry_powiat_prac.grid_remove()
     label_imie.grid_remove()
     entry_imie.grid_remove()
-
     label_nazwa_uczelni.grid_remove()
-
     label_lokalizacja_uczelni.grid_remove()
     entry_lokalizacja_uczelni.grid_remove()
     label_imie.grid_remove()
     entry_imie.grid_remove()
-
     label_nazwa_uczelni.grid_remove()
     entry_nazwa_uczelni.grid_remove()
     label_stud_kierunek.grid_remove()
@@ -384,7 +377,6 @@ def show_studenci_form():
     entry_ucz_powiat.grid_remove()
     label_ucz_wojew.grid_remove()
     entry_ucz_wojew.grid_remove()
-
     label_powiat_prac.grid_remove()
     entry_powiat_prac.grid_remove()
     label_imie.grid_remove()
@@ -394,17 +386,17 @@ def show_studenci_form():
     label_lokalizacja_uczelni.grid_remove()
     entry_lokalizacja_uczelni.grid_remove()
     label_imie.grid()
-    entry_st_imie.grid(row=1, column=1, sticky="ew")
+    entry_st_imie.grid()
     label_nazwa_uczelni.grid()
-    entry_st_nazwa_uczelni.grid(row=3, column=1, sticky="ew")
+    entry_st_nazwa_uczelni.grid()
     label_stud_kierunek.grid()
-    entry_stud_kierunek.grid(row=6, column=1, sticky="ew")
+    entry_stud_kierunek.grid()
     label_stud_grupa.grid()
-    entry_stud_grupa.grid(row=7, column=1, sticky="ew")
+    entry_stud_grupa.grid()
     label_lokalizacja_uczelni.grid()
-    entry_st_lokalizacja_uczelni.grid(row=5, column=1, sticky="ew")
+    entry_st_lokalizacja_uczelni.grid()
     label_stud_akademik.grid()
-    entry_stud_akademik.grid(row=8, column=1, sticky="ew")
+    entry_stud_akademik.grid()
     button_dodaj.grid(row=9, column=0, columnspan=2, sticky="ew")
 
 
@@ -445,7 +437,6 @@ def add_uczelnie():
     entry_ucz_miasto.delete(0, END)
     entry_ucz_powiat.delete(0, END)
     entry_ucz_wojew.set("")
-
     entry_ucz_nazwa.focus()
 
 
@@ -559,7 +550,6 @@ def edit_current():
             entry_powiat_prac.insert(0, pracownicy[real_idx].powiat)
             entry_lokalizacja_uczelni.insert(0, pracownicy[real_idx].lokalizacja_uczelni)
             button_dodaj.config(text="Zapisz zmiany", command=lambda idx=real_idx: update_pracownik(pracownicy, idx))
-
     elif aktualny_mode == 'uczelnie':
         selected = combo_filter.get()
         filtered_indices = [idx for idx, ucz in enumerate(uczelnie) if
@@ -653,4 +643,4 @@ def set_mode(mode: str):
         combo_filter.set("Wszystkie")
         label_filter.grid(in_=ramka_filtry, row=0, column=0, sticky="w", padx=10, pady=(0, 0))
         combo_filter.grid(in_=ramka_filtry, row=0, column=1, sticky="w", padx=10, pady=(0, 0))
-        apply_pracownicy_powiat_filter()
+        apply_pracownicy_pow_ucz_filter()
