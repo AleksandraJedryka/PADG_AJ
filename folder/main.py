@@ -5,7 +5,7 @@ import controller
 from controller import (
     add_pracownik, pracownik_info, update_pracownik, apply_filter,
     update_pracownicy_powiat_filter, update_pracownicy_uczelnia_filter,
-    apply_pracownicy_powiat_filter, update_pracownicy_markers,
+    apply_pracownicy_pow_ucz_filter, update_pracownicy_markers,
     clear_all_markers, info_uczelnie, apply_uczelnie_filter,
     info_studenci, apply_studenci_filter, update_student_markers,
     update_student_filter, show_pracownicy_form, show_uczelnie_form,
@@ -129,8 +129,11 @@ entry_lokalizacja_uczelni = Entry(ramka_formularz)
 entry_lokalizacja_uczelni.grid(row=5, column=1, sticky="ew")
 
 entry_st_imie = Entry(ramka_formularz)
+entry_st_imie.grid(row=1, column=1, sticky="ew")
 entry_st_nazwa_uczelni = Entry(ramka_formularz)
+entry_st_nazwa_uczelni.grid(row=3, column=1, sticky="ew")
 entry_st_lokalizacja_uczelni = Entry(ramka_formularz)
+entry_st_lokalizacja_uczelni.grid(row=5, column=1, sticky="ew")
 
 label_ucz_nazwa = Label(ramka_formularz, text="Nazwa: ")
 entry_ucz_nazwa = Entry(ramka_formularz)
@@ -160,18 +163,18 @@ label_ucz_wojew.grid(row=4, column=0, sticky=W)
 entry_ucz_wojew.grid(row=4, column=1, sticky="ew")
 
 label_stud_kierunek = Label(ramka_formularz, text="Kierunek: ")
-entry_stud_kierunek = Entry(ramka_formularz)
-label_stud_grupa = Label(ramka_formularz, text="Grupa dziekańska: ")
-entry_stud_grupa = Entry(ramka_formularz)
-label_stud_akademik = Label(ramka_formularz, text="Akademik: ")
-entry_stud_akademik = Entry(ramka_formularz)
-
 label_stud_kierunek.grid(row=6, column=0, sticky=W)
+entry_stud_kierunek = Entry(ramka_formularz)
 entry_stud_kierunek.grid(row=6, column=1, sticky="ew")
+label_stud_grupa = Label(ramka_formularz, text="Grupa dziekańska: ")
 label_stud_grupa.grid(row=7, column=0, sticky=W)
+entry_stud_grupa = Entry(ramka_formularz)
 entry_stud_grupa.grid(row=7, column=1, sticky="ew")
+label_stud_akademik = Label(ramka_formularz, text="Akademik: ")
 label_stud_akademik.grid(row=8, column=0, sticky=W)
+entry_stud_akademik = Entry(ramka_formularz)
 entry_stud_akademik.grid(row=8, column=1, sticky="ew")
+
 
 button_dodaj = Button(ramka_formularz, text="Dodaj obiekt", command=lambda: add_pracownik(pracownicy))
 button_dodaj.grid(row=7, column=0, columnspan=2, sticky="ew")
